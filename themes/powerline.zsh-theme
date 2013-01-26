@@ -39,8 +39,8 @@ function git_prompt {
                 echo ""
         fi
 }
-local git_branch='$(git_prompt)%{$PR_NO_COLOR%}'
+local git_branch='$(git_prompt)'
 
 PROMPT="
-%k%f%F{white}%K{blue} %~"${git_branch}" %k%f%F{blue}"$SEGMENT"%f 
-$POWERLINE_COLOR_BG_WHITE $POWERLINE_COLOR_FG_GRAY%D{%D %H:%M:%S} "$COLOR_RESET$POWERLINE_COLOR_FG_WHITE$SEGMENT"$COLOR_RESET "
+%k%f%F{green}%K{010} %~ %F{010}%K{blue}$SEGMENT%k%f%F{white}%K{blue} "${git_branch}" %k%f%F{blue}"$SEGMENT"%f 
+$POWERLINE_COLOR_BG_WHITE $POWERLINE_COLOR_FG_GRAY%D{%D %H:%M:%S} %f%k"$POWERLINE_COLOR_FG_WHITE$SEGMENT"%f%k "
