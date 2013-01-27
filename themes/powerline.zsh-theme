@@ -4,7 +4,6 @@ colors
 setopt prompt_subst
 
 SEGMENT=$'\ue0b0'
-FILLER='${PR_SHIFT_IN}${(e)PR_FILLBAR}${PR_HBAR}${PR_SHIFT_OUT}'
 
 local reset white_fg gray_fg magenta_fg red_fg yellow_fg blue_fg green_fg white_bg blue_bg magenta_bg green_bg
 
