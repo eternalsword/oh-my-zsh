@@ -1,46 +1,136 @@
 # FreeAgent puts the powerline style in zsh !
+autoload -U colors zsh/terminfo
+colors
+setopt prompt_subst
 
 SEGMENT=$'\ue0b0'
+FILLER='${PR_SHIFT_IN}${(e)PR_FILLBAR}${PR_HBAR}${PR_SHIFT_OUT}'
 
-eval COLOR_RESET="%{$terminfo[sgr0]%}"
+local reset white_fg gray_fg magenta_fg red_fg yellow_fg blue_fg green_fg white_bg blue_bg magenta_bg green_bg
 
-POWERLINE_COLOR_BG_GRAY=%K{240}
-POWERLINE_COLOR_BG_LIGHT_GRAY=%K{240}
-POWERLINE_COLOR_BG_WHITE=%K{255}
-
-POWERLINE_COLOR_FG_GRAY=%F{240}
-POWERLINE_COLOR_FG_LIGHT_GRAY=%F{240}
-POWERLINE_COLOR_FG_WHITE=%F{255}
-
-GIT_DIRTY_COLOR=%F{133}
-GIT_CLEAN_COLOR=%F{118}
-GIT_AHEAD_COLOR=%F{011}
-GIT_PROMPT_INFO=%F{012}
+reset="%{$terminfo[sgr0]%}"
+white_fg="%{$fg[white]%}"
+gray_fg="%{$fg_bold[black]%}"
+magenta_fg="%{$fg[magenta]%}"
+red_fg="%{$fg[red]%}"
+yellow_fg="%{$fg_bold[yellow]%}"
+blue_fg="%{$fg[blue]%}"
+green_fg="%{$fg[green]%}"
+white_bg="%{$bg[white]%}"
+blue_bg="%{$bg[blue]%}"
+magenta_bg="%{$bg[magenta]%}"
+green_bg="%{$bg[green]%}"
 
 ZSH_THEME_GIT_PROMPT_PREFIX=" \ue0a0 "
 ZSH_THEME_GIT_PROMPT_SUFFIX="$GIT_PROMPT_INFO"
-ZSH_THEME_GIT_PROMPT_DIRTY=" $GIT_DIRTY_COLOR✘ "
-ZSH_THEME_GIT_PROMPT_CLEAN=" $GIT_CLEAN_COLOR✔ "
-ZSH_THEME_GIT_PROMPT_AHEAD=" $GIT_AHEAD_COLOR⚡ "
+ZSH_THEME_GIT_PROMPT_DIRTY="${red_fg} ✘ "
+ZSH_THEME_GIT_PROMPT_CLEAN="${green_fg} ✔ "
+ZSH_THEME_GIT_PROMPT_AHEAD="${yellow_fg}⚡ "
 
-ZSH_THEME_GIT_PROMPT_ADDED="%F{082}✚%f"
-ZSH_THEME_GIT_PROMPT_MODIFIED="%F{166}✹%f"
-ZSH_THEME_GIT_PROMPT_DELETED="%F{160}✖%f"
-ZSH_THEME_GIT_PROMPT_RENAMED="%F{220]➜%f"
-ZSH_THEME_GIT_PROMPT_UNMERGED="%F{082]═%f"
-ZSH_THEME_GIT_PROMPT_UNTRACKED="%F{190]✭%f"
+# Check if we are on SSH or not
+if [[ -n "$SSH_CLIENT"  ||  -n "$SSH2_CLIENT" ]]; then 
+  eval PR_HOST='%U%m%u' #SSH
+else
+  eval PR_HOST='%m' # no SSH
+fi
 
-# Construct the git prompt
+local -a clock
+
+clock+=( ${reset} )
+clock+=( ${blue_bg} )
+clock+=( ${white_fg} )
+clock+=( " %D{%D %H:%M:%S} " )
+clock+=( ${reset} )
+
+local clock_width
+clock_width=${(S)clock//\%\{*\%\}}
+clock_width=${#${(%)clock_width}}
+
+local -a git
+
 function git_prompt {
-        gp=" $(git_prompt_short_sha)$(git_prompt_info)$(git_prompt_ahead)"
-        if [ "x$gp" != "x" ]; then
-                echo "${GIT_PRE}${gp}${GIT_POST}"
-        else
-                echo ""
-        fi
+	if [ "x$(git_prompt_short_sha)" != "x" ]; then
+		gp="$(git_prompt_short_sha)$(git_prompt_info)$(git_prompt_ahead)"
+	else
+		gp=""
+	fi
+	if [[ "x$gp" != "x" ]]; then
+		echo " ${GIT_PRE}${gp}${GIT_POST} ${white_fg}${blue_bg}$SEGMENT"
+	else
+		echo ""
+	fi
 }
-local git_branch='$(git_prompt)'
+
+function update_top_padding {
+	local git_width
+	git_width=${(S)$(git_prompt)//\%\{*\%\}}
+	git_width=${#${(%)git_width}}
+	if [[ $git_width > 0 ]]; then
+		git_width=$(( ${git_width} + 2 ))
+	fi
+	local termwidth
+	# need to test for portability
+	(( termwidth = ${COLUMNS} + 4 ))
+
+	local topwidth=$(( ${git_width} + ${clock_width} ))
+
+	local toppadding=$(( ${termwidth} - ${topwidth} ))
+
+	local topfiller
+	for i in {1..$toppadding}; do
+		topfiller=$topfiller" "
+	done
+	echo ${reset}${blue_fg}${blue_bg}$topfiller
+}
+
+function update_middle_padding {
+	local pwd_width=${#${(%):-%d}}
+	local termwidth
+	(( termwidth = ${COLUMNS} - 1 ))
+	local middlepadding=$(( ${termwidth} - ${pwd_width} ))
+	local middlefiller
+	for i in {1..$middlepadding}; do
+		middlefiller=$middlefiller" "
+	done
+	echo ${reset}${green_bg}${green_bg}$middlefiller
+}
+
+local -a git
+git+=( ${reset} )
+git+=( ${gray_fg} )
+git+=( ${white_bg} )
+git+=( '$(git_prompt)' )
+
+local gitfiller='$(update_top_padding)'
+
+local top
+top=${(j::)git}${gitfiller}${(j::)clock}
+
+local -a pwd
+pwd+=( ${reset} )
+pwd+=( ${yellow_fg} )
+pwd+=( ${green_bg} )
+pwd+=( " " )
+pwd+=( %U%d%u )
+
+local pwdfiller='$(update_middle_padding)'
+
+local middle
+middle=${(j::)pwd}${pwdfiller}
+
+local -a bottom
+bottom+=( ${reset} )
+bottom+=( ${white_fg} )
+bottom+=( ${magenta_bg} )
+bottom+=( " " )
+bottom+=( %n@${PR_HOST} )
+bottom+=( " " )
+buttom+=( ${reset} )
+bottom+=( ${magenta_fg} )
+bottom+=( %k$SEGMENT )
+bottom+=( ${reset} )
 
 PROMPT="
-%k%f%F{green}%K{010} %~ %F{010}%K{blue}$SEGMENT%k%f%F{white}%K{blue} "${git_branch}" %k%f%F{blue}"$SEGMENT"%f 
-$POWERLINE_COLOR_BG_WHITE $POWERLINE_COLOR_FG_GRAY%D{%D %H:%M:%S} %f%k"$POWERLINE_COLOR_FG_WHITE$SEGMENT"%f%k "
+${top}
+${middle}
+${(j::)bottom} "
