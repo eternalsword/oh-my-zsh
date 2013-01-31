@@ -5,7 +5,7 @@ setopt prompt_subst
 
 function zle-keymap-select {
 	# if the terminal is n-lines, print n-1 lines to avoid overwriting buffer
-	printf "${(%):-%{\n\n%}}"
+	printf "\n\n"
 	zle reset-prompt
 }
 
