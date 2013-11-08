@@ -17,10 +17,10 @@ local reset white_fg gray_fg magenta_fg red_fg yellow_fg blue_fg green_fg white_
 
 reset="%{$terminfo[sgr0]%}"
 white_fg="%{$fg[white]%}"
-gray_fg="%{$fg_bold[black]%}"
+gray_fg="%{$fg[black]%}"
 magenta_fg="%{$fg[magenta]%}"
 red_fg="%{$fg[red]%}"
-yellow_fg="%{$fg_bold[yellow]%}"
+yellow_fg="%{$fg[yellow]%}"
 blue_fg="%{$fg[blue]%}"
 green_fg="%{$fg[green]%}"
 white_bg="%{$bg[white]%}"
@@ -124,7 +124,7 @@ top=${(j::)git}${gitfiller}${(j::)clock}
 
 local -a pwd
 pwd+=( ${reset} )
-pwd+=( ${yellow_fg} )
+pwd+=( ${gray_fg} )
 pwd+=( ${green_bg} )
 pwd+=( " " )
 pwd+=( %U%d%u )
