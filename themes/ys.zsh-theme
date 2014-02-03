@@ -11,6 +11,31 @@ function box_name {
     [ -f ~/.box-name ] && cat ~/.box-name || hostname
 }
 
+# Begin vi-mode indicator thanks to paulgoscicki.com
+vim_ins_mode="%{$fg[green]%} --INSERT-- %{$reset_color%}"
+vim_cmd_mode="%{$fg[red]%} --NORMAL-- %{$reset_color%}"
+vim_mode=$vim_ins_mode
+
+function zle-keymap-select {
+  vim_mode="${${KEYMAP/vicmd/${vim_cmd_mode}}/(main|viins)/${vim_ins_mode}}"
+  zle reset-prompt
+}
+zle -N zle-keymap-select
+
+function zle-line-finish {
+  vim_mode=$vim_ins_mode
+}
+zle -N zle-line-finish
+
+# Fix a bug when you C-c in CMD mode and you'd be prompted with CMD mode indicator, while in fact you would be in INS mode
+# Fixed by catching SIGINT (C-c), set vim_mode to INS and then repropagate the SIGINT, so if anything else depends on it, we will not break it
+# Thanks Ron! (see comments)
+function TRAPINT() {
+  vim_mode=$vim_ins_mode
+  return $(( 128 + $1 ))
+}
+# End vi-mode indicator
+
 # Directory info.
 local current_dir='${PWD/#$HOME/~}'
 
@@ -20,6 +45,9 @@ ZSH_THEME_GIT_PROMPT_PREFIX=" %{$fg[white]%}on%{$reset_color%} git:%{$fg[cyan]%}
 ZSH_THEME_GIT_PROMPT_SUFFIX="%{$reset_color%}"
 ZSH_THEME_GIT_PROMPT_DIRTY=" %{$fg[red]%}x"
 ZSH_THEME_GIT_PROMPT_CLEAN=" %{$fg[green]%}o"
+ZSH_THEME_GIT_PROMPT_AHEAD=" %{$fg[yellow]%}+"
+
+RPROMPT='${vim_mode}'
 
 # Prompt format: \n # USER@MACHINE in DIRECTORY on git:BRANCH STATE [TIME] \n $ 
 PROMPT="
